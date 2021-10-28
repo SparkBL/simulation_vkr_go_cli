@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-const float64EqualityThreshold = 1e-3
+const float64EqualityThreshold = 1e-9
 
 func NextDouble() float64 {
 	return rand.Float64()

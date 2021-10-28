@@ -9,6 +9,7 @@ type StatCollector struct {
 	intervalStats        []IntervalStat
 	outputChannel        chan Request
 	changeIntervalCannel chan bool
+	cur                  IntervalStat
 }
 
 func (s *StatCollector) GatherStat() {
@@ -20,6 +21,10 @@ func (s *StatCollector) GatherStat() {
 			cur.called++
 		}
 	}
+}
+
+func (s *StatCollector) ChangeInterval() {
+	s.intervalStats = append(s.intervalStats)
 }
 
 func NewStatCollector(outChannel chan Request, changeIntervalCannel chan bool) StatCollector {

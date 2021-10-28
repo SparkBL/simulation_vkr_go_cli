@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"rqsim/components"
-	"sort"
 )
 
 func main() {
@@ -13,7 +12,7 @@ func main() {
 	}
 	var inputChannel = make(chan components.Request, 1)
 	var orbitChannel = make(chan components.Request, 1)
-	var orbitAppendChannel = make(chan components.Request, 2)
+	var orbitAppendChannel = make(chan components.Request, 10)
 	var outputChannel = make(chan components.Request, 1)
 	var calledChannel = make(chan components.Request, 1)
 	var inStream components.Process
@@ -40,20 +39,15 @@ func main() {
 	components.Time = 0
 	components.End = conf.End
 	for components.Time < components.End {
-		if len(components.EventQueue) > 0 {
-			sort.Float64s(components.EventQueue)
-			components.Time = components.EventQueue[0]
-			components.EventQueue = components.EventQueue[1:]
-		}
+		components.NextTime()
 		node.Produce()
 		orbit.Append()
 		inStream.Produce()
 		orbit.Produce()
 		callStream.Produce()
-		fmt.Printf("Time is %2f, Event Queue is %2f", components.Time, components.EventQueue)
 		if len(outputChannel) > 0 {
 			<-outputChannel
 		}
 	}
-	fmt.Println(len(inputChannel), len(outputChannel), len(calledChannel), len(orbitAppendChannel), len(orbitChannel), len(outputChannel))
+	fmt.Println(len(inputChannel), len(outputChannel), len(calledChannel), len(orbitAppendChannel), len(orbitChannel), len(outputChannel), components.Time)
 }

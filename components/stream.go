@@ -19,8 +19,9 @@ func (m *MMPP) shift() {
 				if chance <= sum {
 					m.state = i
 					m.nextProduce = Request{StatusChangeAt: ExponentialDelay(m.L[m.state][m.state]), Type: m.RequestType, Status: statusTravel}
-					EventQueue = append(EventQueue, m.nextProduce.StatusChangeAt)
 					m.shiftTime = ExponentialDelay(-m.Q[m.state][m.state])
+					EventQueue = append(EventQueue, m.nextProduce.StatusChangeAt)
+					EventQueue = append(EventQueue, m.shiftTime)
 				}
 			}
 		}

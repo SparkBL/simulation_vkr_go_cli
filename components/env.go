@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 )
 
 type Process interface {
@@ -52,4 +53,11 @@ func ParseConfig(configFile string) (Config, error) {
 	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteValue, &conf)
 	return conf, nil
+}
+func NextTime() {
+	if len(EventQueue) > 0 {
+		sort.Float64s(EventQueue)
+		Time = EventQueue[0]
+		EventQueue = EventQueue[1:]
+	}
 }
