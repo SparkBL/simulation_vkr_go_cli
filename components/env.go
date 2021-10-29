@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sort"
 )
 
 type Process interface {
@@ -19,6 +18,7 @@ func Init() {
 var EventQueue []float64
 var Time float64
 var End float64
+var Interval float64
 
 type Config struct {
 	InputType      string      `json:"input_type"`
@@ -34,10 +34,10 @@ type Config struct {
 	Mu2            float64     `json:"mu2"`
 	End            float64     `json:"end"`
 	Interval       float64     `json:"interval"`
+	Delimiter      rune        `json:"delimiter"`
 }
 
 func ParseConfig(configFile string) (Config, error) {
-
 	jsonFile, err := os.Open(configFile)
 	if err != nil {
 		log.Fatal("Couldn't open config file ", configFile)
@@ -45,19 +45,7 @@ func ParseConfig(configFile string) (Config, error) {
 	}
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	// we initialize our Users array
 	var conf Config
-
-	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteValue, &conf)
 	return conf, nil
-}
-func NextTime() {
-	if len(EventQueue) > 0 {
-		sort.Float64s(EventQueue)
-		Time = EventQueue[0]
-		EventQueue = EventQueue[1:]
-	}
 }
