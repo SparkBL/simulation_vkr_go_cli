@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func writeToCSV(outputFile string, rows [][]float64, delimiter rune) {
+func writeToCSV(outputFile string, rows [][]float64) {
 	f, err := os.Create(outputFile)
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +27,7 @@ func writeToCSV(outputFile string, rows [][]float64, delimiter rune) {
 		}
 	}
 	writer := csv.NewWriter(f)
-	//writer.Comma = delimiter
+	writer.Comma = ';'
 
 	writer.WriteAll(rowsStr)
 
@@ -37,7 +38,10 @@ func writeToCSV(outputFile string, rows [][]float64, delimiter rune) {
 }
 
 func main() {
-	conf, err := components.ParseConfig("conf.json")
+	configFile := flag.String("c", "conf.json", "Path to json config file of rq system")
+	outputFile := flag.String("o", "out.csv", "name of output file")
+	flag.Parse()
+	conf, err := components.ParseConfig(*configFile)
 	if err != nil {
 		return
 	}
@@ -101,7 +105,6 @@ func main() {
 		statCollector.GatherStat()
 	}
 	close(outputChannel)
-	//fmt.Println(len(inputChannel), len(outputChannel), len(calledChannel), len(orbitAppendChannel), len(orbitChannel), len(outputChannel), components.Time)
-	writeToCSV("testout.csv", statCollector.GetDistribution(), conf.Delimiter)
-	//fmt.Println(statCollector.GetDistribution())
+
+	writeToCSV(*outputFile, statCollector.GetDistribution())
 }

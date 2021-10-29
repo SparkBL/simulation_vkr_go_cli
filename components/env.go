@@ -34,7 +34,6 @@ type Config struct {
 	Mu2            float64     `json:"mu2"`
 	End            float64     `json:"end"`
 	Interval       float64     `json:"interval"`
-	Delimiter      rune        `json:"delimiter"`
 }
 
 func ParseConfig(configFile string) (Config, error) {
