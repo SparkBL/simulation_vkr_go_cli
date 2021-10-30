@@ -47,7 +47,7 @@ func main() {
 	}
 	var inputChannel = make(chan components.Request, 1)
 	var orbitChannel = make(chan components.Request, 1)
-	var orbitAppendChannel = make(chan components.Request, 10)
+	var orbitAppendChannel = make(chan components.Request, 2)
 	var outputChannel = make(chan components.Request, 1)
 	var calledChannel = make(chan components.Request, 1)
 	var inStream components.Process
@@ -87,10 +87,10 @@ func main() {
 	go statCollector.GatherStat()
 	for components.Time < components.End {
 		inStream.Produce()
-		orbit.Append()
 		orbit.Produce()
 		callStream.Produce()
 		node.Produce()
+		orbit.Append()
 		if len(components.EventQueue) > 0 {
 			sort.Float64s(components.EventQueue)
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
