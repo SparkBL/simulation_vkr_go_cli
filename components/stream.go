@@ -8,11 +8,11 @@ type MMPP struct {
 	shiftTime         float64
 	nextProduce       Request
 	channel           chan Request
-	timeChangeChannel chan bool
+	timeChangeChannel chan float64
 }
 
-func (m *MMPP) shift() {
-	if almostEqual(m.shiftTime, Time) {
+func (m *MMPP) shift(t float64) {
+	if almostEqual(m.shiftTime, t) {
 		sum, chance := 0.0, NextDouble()
 		for i := 0; i < len(m.Q); i++ {
 			if i != m.state {
@@ -31,9 +31,9 @@ func (m *MMPP) shift() {
 
 func (m *MMPP) Start() {
 	go func() {
-		for range m.timeChangeChannel {
-			m.shift()
-			if almostEqual(m.nextProduce.StatusChangeAt, Time) {
+		for t := range m.timeChangeChannel {
+			m.shift(t)
+			if almostEqual(m.nextProduce.StatusChangeAt, t) {
 				m.channel <- m.nextProduce
 				m.nextProduce = Request{StatusChangeAt: ExponentialDelay(m.L[m.state][m.state]), Type: m.RequestType, Status: statusTravel}
 				AppendToEventQueue(m.nextProduce.StatusChangeAt)
@@ -47,13 +47,13 @@ type SimpleInput struct {
 	delay             Delay
 	RequestType       int
 	channel           chan Request
-	timeChangeChannel chan bool
+	timeChangeChannel chan float64
 }
 
 func (s *SimpleInput) Start() {
 	go func() {
-		for range s.timeChangeChannel {
-			if almostEqual(s.nextProduce.StatusChangeAt, Time) {
+		for t := range s.timeChangeChannel {
+			if almostEqual(s.nextProduce.StatusChangeAt, t) {
 				s.channel <- s.nextProduce
 				s.nextProduce = Request{StatusChangeAt: s.delay.Get(), Type: s.RequestType, Status: statusTravel}
 				AppendToEventQueue(s.nextProduce.StatusChangeAt)
@@ -62,7 +62,7 @@ func (s *SimpleInput) Start() {
 	}()
 }
 
-func NewMMPP(L [][]float64, Q [][]float64, RequstType int, channel chan Request, TimeChangeChannel chan bool) *MMPP {
+func NewMMPP(L [][]float64, Q [][]float64, RequstType int, channel chan Request, TimeChangeChannel chan float64) *MMPP {
 	nprod := Request{StatusChangeAt: ExponentialDelay(L[0][0]), Type: RequstType, Status: statusTravel}
 	AppendToEventQueue(nprod.StatusChangeAt)
 	//channel <- nprod
@@ -77,7 +77,7 @@ func NewMMPP(L [][]float64, Q [][]float64, RequstType int, channel chan Request,
 	}
 }
 
-func NewSimpleStream(delay Delay, RequestType int, channel chan Request, TimeChangeChannel chan bool) *SimpleInput {
+func NewSimpleStream(delay Delay, RequestType int, channel chan Request, TimeChangeChannel chan float64) *SimpleInput {
 	nprod := Request{StatusChangeAt: delay.Get(), Type: RequestType, Status: statusTravel}
 	//channel <- nprod
 	AppendToEventQueue(nprod.StatusChangeAt)

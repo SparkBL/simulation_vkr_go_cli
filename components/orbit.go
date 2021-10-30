@@ -5,7 +5,7 @@ type Orbit struct {
 	delay              Delay
 	orbitChannel       chan Request
 	orbitAppendChannel chan Request
-	timeChangeChannel  chan bool
+	timeChangeChannel  chan float64
 }
 
 func (o *Orbit) Start() {
@@ -18,10 +18,10 @@ func (o *Orbit) Start() {
 		}
 	}()
 	go func() {
-		for range o.timeChangeChannel {
+		for t := range o.timeChangeChannel {
 			if len(o.requests) > 0 {
 				for _, v := range o.requests {
-					if almostEqual(v.StatusChangeAt, Time) {
+					if almostEqual(v.StatusChangeAt, t) {
 						ret := v
 						o.requests = o.requests[1:]
 						o.orbitChannel <- ret
@@ -34,7 +34,7 @@ func (o *Orbit) Start() {
 	}()
 }
 
-func NewOrbit(delay Delay, orbitChannel chan Request, orbitAppendChannel chan Request, TimeChangeChannel chan bool) *Orbit {
+func NewOrbit(delay Delay, orbitChannel chan Request, orbitAppendChannel chan Request, TimeChangeChannel chan float64) *Orbit {
 	return &Orbit{
 		delay:              delay,
 		orbitChannel:       orbitChannel,

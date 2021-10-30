@@ -53,7 +53,7 @@ func main() {
 	var inStream components.Process
 	var sigmaDelay components.Delay
 
-	tchInStream, tchOrbit, tchCallStream, tchNode := make(chan bool), make(chan bool), make(chan bool), make(chan bool)
+	tchInStream, tchOrbit, tchCallStream, tchNode := make(chan float64), make(chan float64), make(chan float64), make(chan float64)
 
 	switch conf.InputType {
 	case "simple":
@@ -80,12 +80,12 @@ func main() {
 	components.Time = 0
 	components.End = conf.End
 	components.Interval = conf.Interval
-	go func() {
+	/*go func() {
 		for {
 			fmt.Printf("Simulating for %2f. End at %2f\r", components.Time, components.End)
 			time.Sleep(time.Second)
 		}
-	}()
+	}()*/
 	go statCollector.GatherStat()
 	inStream.Start()
 	orbit.Start()
@@ -95,13 +95,17 @@ func main() {
 	for components.Time < components.End {
 		if len(components.EventQueue) > 0 {
 			sort.Float64s(components.EventQueue)
+			fmt.Println(components.EventQueue, components.Time)
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
-			tchInStream <- true
-			tchOrbit <- true
-			tchCallStream <- true
-			tchNode <- true
+			tchInStream <- components.Time
+			tchOrbit <- components.Time
+			tchCallStream <- components.Time
+			tchNode <- components.Time
+			if len(components.EventQueue) == 0 {
+				time.Sleep(time.Second)
+			}
 		}
-		time.Sleep(time.Second / 2)
+
 	}
 	close(outputChannel)
 

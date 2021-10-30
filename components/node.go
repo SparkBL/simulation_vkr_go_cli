@@ -9,13 +9,13 @@ type Node struct {
 	orbitChannel       chan Request
 	orbitAppendChannel chan Request
 	outChannel         chan Request
-	timeChangeChannel  chan bool
+	timeChangeChannel  chan float64
 }
 
 func (n *Node) Start() {
 	go func() {
-		for range n.timeChangeChannel {
-			if n.nowServing.Status == statusServing && almostEqual(n.nowServing.StatusChangeAt, Time) {
+		for t := range n.timeChangeChannel {
+			if n.nowServing.Status == statusServing && almostEqual(n.nowServing.StatusChangeAt, t) {
 				n.nowServing.Status = statusServed
 				n.outChannel <- n.nowServing
 			}
@@ -55,7 +55,7 @@ func (n *Node) Start() {
 		}
 	}()
 }
-func NewNode(inputDelay Delay, calledDelay Delay, inChannel chan Request, callChannel chan Request, orbitChannel chan Request, orbitAppendChannel chan Request, outChannel chan Request, TimeChangeChannel chan bool) *Node {
+func NewNode(inputDelay Delay, calledDelay Delay, inChannel chan Request, callChannel chan Request, orbitChannel chan Request, orbitAppendChannel chan Request, outChannel chan Request, TimeChangeChannel chan float64) *Node {
 	return &Node{inputDelay: inputDelay,
 		calledDelay:        calledDelay,
 		inChannel:          inChannel,
