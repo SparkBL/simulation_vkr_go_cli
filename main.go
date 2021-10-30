@@ -74,27 +74,27 @@ func main() {
 	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannel)
 	orbit := components.NewOrbit(sigmaDelay, orbitChannel, orbitAppendChannel)
 	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannel, calledChannel, orbitChannel, orbitAppendChannel, outputChannel)
-	statCollector := components.NewTimedStatCollector(outputChannel)
+	statCollector := components.NewStatCollector(outputChannel)
 	components.Time = 0
 	components.End = conf.End
 	components.Interval = conf.Interval
 	go func() {
-		for true {
+		for {
 			fmt.Printf("Simulating for %2f. End at %2f\r", components.Time, components.End)
 			time.Sleep(time.Second)
 		}
 	}()
 	go statCollector.GatherStat()
 	for components.Time < components.End {
+		inStream.Produce()
+		orbit.Append()
+		orbit.Produce()
+		callStream.Produce()
+		node.Produce()
 		if len(components.EventQueue) > 0 {
 			sort.Float64s(components.EventQueue)
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
 		}
-		node.Produce()
-		orbit.Append()
-		inStream.Produce()
-		orbit.Produce()
-		callStream.Produce()
 	}
 	close(outputChannel)
 
