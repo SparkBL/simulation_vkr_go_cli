@@ -1,8 +1,8 @@
 package components
 
 type IntervalStat struct {
-	input  float64
-	called float64
+	input  int
+	called int
 }
 
 type StatCollector struct {
@@ -12,18 +12,20 @@ type StatCollector struct {
 }
 
 func (s *StatCollector) GatherStat() {
-	for i := 0; i < len(s.outputChannel); i++ {
-		if r := <-s.outputChannel; r.Type == TypeInput {
+	curInterval := Time + Interval
+	for r := range s.outputChannel {
+		for r.StatusChangeAt > curInterval {
+			s.intervalStats = append(s.intervalStats, s.cur)
+			s.cur = IntervalStat{input: 0, called: 0}
+			curInterval += Interval
+		}
+		switch r.Type {
+		case TypeInput:
 			s.cur.input++
-		} else {
+		case TypeCalled:
 			s.cur.called++
 		}
 	}
-}
-
-func (s *StatCollector) ChangeInterval() {
-	s.intervalStats = append(s.intervalStats, s.cur)
-	s.cur = IntervalStat{input: 0, called: 0}
 }
 
 func NewStatCollector(outChannel chan Request) StatCollector {
@@ -35,15 +37,15 @@ func NewStatCollector(outChannel chan Request) StatCollector {
 }
 
 func (s *StatCollector) MeanInput() float64 {
-	sum := 0.0
+	sum := 0
 	for _, e := range s.intervalStats {
 		sum += e.input
 	}
-	return sum / float64(len(s.intervalStats))
+	return float64(sum) / float64(len(s.intervalStats))
 }
 
 func (s *StatCollector) GetDistribution() [][]float64 {
-	distSizeX, distSizeY := 0.0, 0.0
+	distSizeX, distSizeY := 0, 0
 	for _, e := range s.intervalStats {
 		if e.input > distSizeX {
 			distSizeX = e.input
@@ -58,7 +60,7 @@ func (s *StatCollector) GetDistribution() [][]float64 {
 	}
 
 	for _, e := range s.intervalStats {
-		distr[int(e.input)][int(e.called)]++
+		distr[e.input][e.called]++
 	}
 	for i := range distr {
 		for j := range distr[i] {

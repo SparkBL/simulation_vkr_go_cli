@@ -78,22 +78,16 @@ func main() {
 	components.Time = 0
 	components.End = conf.End
 	components.Interval = conf.Interval
-	nextStat := components.Interval
 	go func() {
 		for true {
 			fmt.Printf("Mean input is %2f. Simulating for %2f. End at %2f\r", statCollector.MeanInput(), components.Time, components.End)
 			time.Sleep(time.Second)
 		}
 	}()
+	go statCollector.GatherStat()
 	for components.Time < components.End {
 		if len(components.EventQueue) > 0 {
 			sort.Float64s(components.EventQueue)
-			nextTime := components.EventQueue[0]
-			for nextTime > nextStat {
-				components.Time = nextStat
-				nextStat = components.Time + components.Interval
-				statCollector.ChangeInterval()
-			}
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
 		}
 		node.Produce()
@@ -101,7 +95,6 @@ func main() {
 		inStream.Produce()
 		orbit.Produce()
 		callStream.Produce()
-		statCollector.GatherStat()
 	}
 	close(outputChannel)
 
