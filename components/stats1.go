@@ -1,57 +1,55 @@
 package components
 
-/*type TimedStatCollector struct {
+type TimedStatCollector struct {
 	distr         [][]float64
 	outputChannel chan Request
-	interval      float64
-	curInterval   float64
+	curCount      IntervalStat
 }
 
 func (s *TimedStatCollector) GatherStat() {
-	for i := 0; i < len(s.outputChannel); i++ {
-		r := <-s.outputChannel
-		if !(r.StatusChangeAt>=Time-s.curInterval && r.StatusChangeAt<=s.curInterval){
-			s.curInterval +=s.interval
+	curInterval := Time + Interval
+	curPoint := 0.0
+	for r := range s.outputChannel {
+		for r.StatusChangeAt > curInterval {
+			s.distr[s.curCount.input][s.curCount.called] += curInterval - curPoint
+			curPoint = curInterval
+			curInterval += Interval
+			s.curCount = IntervalStat{input: 0, called: 0}
 		}
-		for !(r.StatusChangeAt>=Time-s.curInterval && r.StatusChangeAt<=s.curInterval){
-			s.distr[0][0] += s.interval
-		}
-		if r.Type == TypeInput {
-
-		} else {
+		s.distr[s.curCount.input][s.curCount.called] += r.StatusChangeAt - curPoint
+		curPoint = r.StatusChangeAt
+		switch r.Type {
+		case TypeInput:
+			s.curCount.input++
+		case TypeCalled:
+			s.curCount.called++
 		}
 	}
 }
 
-func NewTimedStatCollector(outChannel chan Request, interval float64) TimedStatCollector {
+func NewTimedStatCollector(outChannel chan Request) TimedStatCollector {
+	distrw := make([][]float64, 20)
+	for i := range distrw {
+		distrw[i] = make([]float64, 2)
+	}
 	return TimedStatCollector{
-		distr:         make([][]float64, 10, 10),
+		distr:         distrw,
 		outputChannel: outChannel,
-		interval:      interval,
-		curInterval:   interval,
+		curCount:      IntervalStat{input: 0, called: 0},
 	}
 }
 
-func (s *StatCollector) TimedGetDistribution() [][]float64 {
-	distSizeX, distSizeY := 0.0, 0.0
-	for _, e := range s.intervalStats {
-		if e.input > distSizeX {
-			distSizeX = e.input
-		}
-		if e.called > distSizeY {
-			distSizeY = e.called
+func (s *TimedStatCollector) GetDistribution() [][]float64 {
+	normalize := 0.0
+	for i := 0; i < len(s.distr); i++ {
+		for j := 0; j < len(s.distr[i]); j++ {
+			normalize += s.distr[i][j]
 		}
 	}
-	distr := make([][]float64, int(distSizeX), int(distSizeY))
-
-	for _, e := range s.intervalStats {
-		distr[int(e.input)][int(e.called)]++
-	}
-	for i := range distr {
-		for j := range distr[i] {
-			distr[i][j] /= float64(len(s.intervalStats))
+	for i := range s.distr {
+		for j := range s.distr[i] {
+			s.distr[i][j] /= normalize
 		}
 	}
-	return distr
+	return s.distr
 }
-*/

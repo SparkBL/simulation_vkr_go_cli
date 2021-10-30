@@ -74,13 +74,13 @@ func main() {
 	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannel)
 	orbit := components.NewOrbit(sigmaDelay, orbitChannel, orbitAppendChannel)
 	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannel, calledChannel, orbitChannel, orbitAppendChannel, outputChannel)
-	statCollector := components.NewStatCollector(outputChannel)
+	statCollector := components.NewTimedStatCollector(outputChannel)
 	components.Time = 0
 	components.End = conf.End
 	components.Interval = conf.Interval
 	go func() {
 		for true {
-			fmt.Printf("Mean input is %2f. Simulating for %2f. End at %2f\r", statCollector.MeanInput(), components.Time, components.End)
+			fmt.Printf("Simulating for %2f. End at %2f\r", components.Time, components.End)
 			time.Sleep(time.Second)
 		}
 	}()

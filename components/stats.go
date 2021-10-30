@@ -62,9 +62,10 @@ func (s *StatCollector) GetDistribution() [][]float64 {
 	for _, e := range s.intervalStats {
 		distr[e.input][e.called]++
 	}
+	norm := float64(len(s.intervalStats))
 	for i := range distr {
 		for j := range distr[i] {
-			distr[i][j] /= float64(len(s.intervalStats))
+			distr[i][j] /= norm
 		}
 	}
 	return distr
