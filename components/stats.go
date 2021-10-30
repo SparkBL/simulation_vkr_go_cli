@@ -1,7 +1,5 @@
 package components
 
-import "sync"
-
 type IntervalStat struct {
 	input  float64
 	called float64
@@ -11,7 +9,6 @@ type StatCollector struct {
 	intervalStats []IntervalStat
 	outputChannel chan Request
 	cur           IntervalStat
-	mu            sync.Mutex
 }
 
 func (s *StatCollector) GatherStat() {
@@ -35,6 +32,14 @@ func NewStatCollector(outChannel chan Request) StatCollector {
 		outputChannel: outChannel,
 		cur:           IntervalStat{input: 0, called: 0},
 	}
+}
+
+func (s *StatCollector) MeanInput() float64 {
+	sum := 0.0
+	for _, e := range s.intervalStats {
+		sum += e.input
+	}
+	return sum / float64(len(s.intervalStats))
 }
 
 func (s *StatCollector) GetDistribution() [][]float64 {

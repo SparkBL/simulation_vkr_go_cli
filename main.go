@@ -81,7 +81,7 @@ func main() {
 	nextStat := components.Interval
 	go func() {
 		for true {
-			fmt.Printf("Simulating for %2f. End at %2f\r", components.Time, components.End)
+			fmt.Printf("Mean input is %2f. Simulating for %2f. End at %2f\r", statCollector.MeanInput(), components.Time, components.End)
 			time.Sleep(time.Second)
 		}
 	}()
@@ -93,7 +93,6 @@ func main() {
 				components.Time = nextStat
 				nextStat = components.Time + components.Interval
 				statCollector.ChangeInterval()
-				statCollector.GatherStat()
 			}
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
 		}
