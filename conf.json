@@ -1,7 +1,7 @@
 {
-    "input_type":"mmpp",
+    "input_type":"simple",
     "sigma_delay_type":"exp",
-    "sigma": 0.1,
+    "sigma": 0.4,
     "sigmaA":0.3,
     "sigmaB": 0.4,
     "L":[
@@ -16,6 +16,6 @@
     "mu1": 2,
     "mu2": 1.5,
     "alpha" :0.8,
-    "end" : 4000000,
+    "end" : 6000000,
     "interval" : 5
 }

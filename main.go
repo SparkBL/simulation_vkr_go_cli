@@ -78,6 +78,7 @@ func main() {
 	components.Time = 0
 	components.End = conf.End
 	components.Interval = conf.Interval
+	fmt.Println("Parameters set. Started...")
 	go func() {
 		for {
 			fmt.Printf("Simulating for %2f. End at %2f\r", components.Time, components.End)
@@ -85,6 +86,7 @@ func main() {
 		}
 	}()
 	go statCollector.GatherStat()
+	start := time.Now()
 	for components.Time < components.End {
 		inStream.Produce()
 		orbit.Produce()
@@ -97,6 +99,7 @@ func main() {
 		}
 	}
 	close(outputChannel)
+	fmt.Printf("\nSimulation time - %v", time.Since(start))
 
 	writeToCSV(*outputFile, statCollector.GetDistribution())
 }

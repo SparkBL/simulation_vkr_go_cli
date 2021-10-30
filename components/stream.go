@@ -7,12 +7,12 @@ type MMPP struct {
 	state       int
 	shiftTime   float64
 	nextProduce Request
-	channel     chan Request
+	channel     chan<- Request
 }
 
 func (m *MMPP) shift() {
 	if almostEqual(m.shiftTime, Time) {
-		sum, chance := 0.0, NextDouble()
+		sum, chance := 0.0, rng.Float64()
 		for i := 0; i < len(m.Q); i++ {
 			if i != m.state {
 				sum += m.Q[m.state][i] / (-m.Q[m.state][m.state])
@@ -41,7 +41,7 @@ type SimpleInput struct {
 	nextProduce Request
 	delay       Delay
 	RequestType int
-	channel     chan Request
+	channel     chan<- Request
 }
 
 func (s *SimpleInput) Produce() {
@@ -52,7 +52,7 @@ func (s *SimpleInput) Produce() {
 	}
 }
 
-func NewMMPP(L [][]float64, Q [][]float64, RequstType int, channel chan Request) *MMPP {
+func NewMMPP(L [][]float64, Q [][]float64, RequstType int, channel chan<- Request) *MMPP {
 	nprod := Request{StatusChangeAt: ExponentialDelay(L[0][0]), Type: RequstType, Status: statusTravel}
 	EventQueue = append(EventQueue, nprod.StatusChangeAt)
 	//channel <- nprod
@@ -65,7 +65,7 @@ func NewMMPP(L [][]float64, Q [][]float64, RequstType int, channel chan Request)
 		channel:     channel}
 }
 
-func NewSimpleStream(delay Delay, RequestType int, channel chan Request) *SimpleInput {
+func NewSimpleStream(delay Delay, RequestType int, channel chan<- Request) *SimpleInput {
 	nprod := Request{StatusChangeAt: delay.Get(), Type: RequestType, Status: statusTravel}
 	//channel <- nprod
 	EventQueue = append(EventQueue, nprod.StatusChangeAt)

@@ -3,8 +3,8 @@ package components
 type Orbit struct {
 	requests           []Request
 	delay              Delay
-	orbitChannel       chan Request
-	orbitAppendChannel chan Request
+	orbitChannel       chan<- Request
+	orbitAppendChannel <-chan Request
 }
 
 func (o *Orbit) Append() {
@@ -32,7 +32,7 @@ func (o *Orbit) Produce() {
 	}
 }
 
-func NewOrbit(delay Delay, orbitChannel chan Request, orbitAppendChannel chan Request) *Orbit {
+func NewOrbit(delay Delay, orbitChannel chan<- Request, orbitAppendChannel <-chan Request) *Orbit {
 	return &Orbit{
 		delay:              delay,
 		orbitChannel:       orbitChannel,

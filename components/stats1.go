@@ -2,7 +2,7 @@ package components
 
 type TimedStatCollector struct {
 	distr         [][]float64
-	outputChannel chan Request
+	outputChannel <-chan Request
 	curCount      IntervalStat
 }
 
@@ -27,7 +27,7 @@ func (s *TimedStatCollector) GatherStat() {
 	}
 }
 
-func NewTimedStatCollector(outChannel chan Request) TimedStatCollector {
+func NewTimedStatCollector(outChannel <-chan Request) TimedStatCollector {
 	distrw := make([][]float64, 20)
 	for i := range distrw {
 		distrw[i] = make([]float64, 2)

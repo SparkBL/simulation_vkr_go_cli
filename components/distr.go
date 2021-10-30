@@ -8,16 +8,12 @@ import (
 	"github.com/seehuhn/mt19937"
 )
 
-const float64EqualityThreshold = 1e-14
+const float64EqualityThreshold = 1e-11
 
 var rng = rand.New(mt19937.New())
 
 func GenSeed() {
 	rng.Seed(time.Now().UnixNano())
-}
-
-func NextDouble() float64 {
-	return rng.Float64()
 }
 
 type Delay interface {

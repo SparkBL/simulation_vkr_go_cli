@@ -4,11 +4,11 @@ type Node struct {
 	nowServing         Request
 	inputDelay         Delay
 	calledDelay        Delay
-	inChannel          chan Request
-	callChannel        chan Request
-	orbitChannel       chan Request
-	orbitAppendChannel chan Request
-	outChannel         chan Request
+	inChannel          <-chan Request
+	callChannel        <-chan Request
+	orbitChannel       <-chan Request
+	orbitAppendChannel chan<- Request
+	outChannel         chan<- Request
 }
 
 func (n *Node) Produce() {
@@ -46,7 +46,7 @@ func (n *Node) Produce() {
 		}
 	}
 }
-func NewNode(inputDelay Delay, calledDelay Delay, inChannel chan Request, callChannel chan Request, orbitChannel chan Request, orbitAppendChannel chan Request, outChannel chan Request) *Node {
+func NewNode(inputDelay Delay, calledDelay Delay, inChannel <-chan Request, callChannel <-chan Request, orbitChannel <-chan Request, orbitAppendChannel chan<- Request, outChannel chan<- Request) *Node {
 	return &Node{inputDelay: inputDelay,
 		calledDelay:        calledDelay,
 		inChannel:          inChannel,

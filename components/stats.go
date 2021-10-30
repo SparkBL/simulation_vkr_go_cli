@@ -7,7 +7,7 @@ type IntervalStat struct {
 
 type StatCollector struct {
 	intervalStats []IntervalStat
-	outputChannel chan Request
+	outputChannel <-chan Request
 	cur           IntervalStat
 }
 
@@ -28,7 +28,7 @@ func (s *StatCollector) GatherStat() {
 	}
 }
 
-func NewStatCollector(outChannel chan Request) StatCollector {
+func NewStatCollector(outChannel <-chan Request) StatCollector {
 	return StatCollector{
 		intervalStats: make([]IntervalStat, 0),
 		outputChannel: outChannel,
