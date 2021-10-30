@@ -53,11 +53,13 @@ func main() {
 	var inStream components.Process
 	var sigmaDelay components.Delay
 
+	tchInStream, tchOrbit, tchCallStream, tchNode := make(chan bool), make(chan bool), make(chan bool), make(chan bool)
+
 	switch conf.InputType {
 	case "simple":
-		inStream = components.NewSimpleStream(components.ExpDelay{Intensity: conf.LSimple}, components.TypeInput, inputChannel)
+		inStream = components.NewSimpleStream(components.ExpDelay{Intensity: conf.LSimple}, components.TypeInput, inputChannel, tchInStream)
 	case "mmpp":
-		inStream = components.NewMMPP(conf.L, conf.Q, components.TypeInput, inputChannel)
+		inStream = components.NewMMPP(conf.L, conf.Q, components.TypeInput, inputChannel, tchInStream)
 	default:
 		return
 	}
@@ -71,9 +73,9 @@ func main() {
 		return
 	}
 
-	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannel)
-	orbit := components.NewOrbit(sigmaDelay, orbitChannel, orbitAppendChannel)
-	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannel, calledChannel, orbitChannel, orbitAppendChannel, outputChannel)
+	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannel, tchCallStream)
+	orbit := components.NewOrbit(sigmaDelay, orbitChannel, orbitAppendChannel, tchOrbit)
+	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannel, calledChannel, orbitChannel, orbitAppendChannel, outputChannel, tchNode)
 	statCollector := components.NewStatCollector(outputChannel)
 	components.Time = 0
 	components.End = conf.End
@@ -85,16 +87,21 @@ func main() {
 		}
 	}()
 	go statCollector.GatherStat()
+	inStream.Start()
+	orbit.Start()
+	callStream.Start()
+	node.Start()
+
 	for components.Time < components.End {
-		inStream.Produce()
-		orbit.Append()
-		orbit.Produce()
-		callStream.Produce()
-		node.Produce()
 		if len(components.EventQueue) > 0 {
 			sort.Float64s(components.EventQueue)
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
+			tchInStream <- true
+			tchOrbit <- true
+			tchCallStream <- true
+			tchNode <- true
 		}
+		time.Sleep(time.Second / 2)
 	}
 	close(outputChannel)
 

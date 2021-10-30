@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 )
 
 type Process interface {
-	Produce()
+	Start()
 }
 
 func Init() {
@@ -34,6 +35,12 @@ type Config struct {
 	Mu2            float64     `json:"mu2"`
 	End            float64     `json:"end"`
 	Interval       float64     `json:"interval"`
+}
+
+func AppendToEventQueue(eventTime float64) {
+	if !math.IsInf(eventTime, 0) {
+		EventQueue = append(EventQueue, eventTime)
+	}
 }
 
 func ParseConfig(configFile string) (Config, error) {
