@@ -8,7 +8,7 @@ import (
 	"github.com/seehuhn/mt19937"
 )
 
-const float64EqualityThreshold = 1e-9
+const float64EqualityThreshold = 1e-14
 
 var rng = rand.New(mt19937.New())
 

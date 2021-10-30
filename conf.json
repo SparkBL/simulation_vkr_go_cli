@@ -17,5 +17,5 @@
     "mu2": 1.5,
     "alpha" :0.8,
     "end" : 4000000,
-    "interval" : 15
+    "interval" : 5
 }
