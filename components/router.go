@@ -24,6 +24,5 @@ func (w *WriteRouter) Push(e Request) {
 
 func NewRouter() (*ReadRouter, *WriteRouter) {
 	storage := make([]Request, 0)
-	println(storage)
 	return &ReadRouter{q: &storage}, &WriteRouter{q: &storage}
 }
