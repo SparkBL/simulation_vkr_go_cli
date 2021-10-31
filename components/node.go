@@ -4,10 +4,10 @@ type Node struct {
 	nowServing         Request
 	inputDelay         Delay
 	calledDelay        Delay
-	inChannel          <-chan Request
-	callChannel        <-chan Request
-	orbitChannel       <-chan Request
-	orbitAppendChannel chan<- Request
+	inChannel          *ReadRouter
+	callChannel        *ReadRouter
+	orbitChannel       *ReadRouter
+	orbitAppendChannel *WriteRouter
 	outChannel         chan<- Request
 }
 
@@ -16,37 +16,37 @@ func (n *Node) Produce() {
 		n.nowServing.Status = statusServed
 		n.outChannel <- n.nowServing
 	}
-	if len(n.inChannel) > 0 {
+	if n.inChannel.Len() > 0 {
 		if n.nowServing.Status == statusServing {
-			n.orbitAppendChannel <- <-n.inChannel
+			n.orbitAppendChannel.Push(n.inChannel.Pop())
 		} else {
-			n.nowServing = <-n.inChannel
+			n.nowServing = n.inChannel.Pop()
 			n.nowServing.StatusChangeAt, n.nowServing.Status = n.inputDelay.Get(), statusServing
 			EventQueue = append(EventQueue, n.nowServing.StatusChangeAt)
 		}
 	}
 
-	if len(n.orbitChannel) > 0 {
+	if n.orbitChannel.Len() > 0 {
 		if n.nowServing.Status == statusServing {
-			n.orbitAppendChannel <- <-n.orbitChannel
+			n.orbitAppendChannel.Push(n.orbitChannel.Pop())
 		} else {
-			n.nowServing = <-n.orbitChannel
+			n.nowServing = n.orbitChannel.Pop()
 			n.nowServing.StatusChangeAt, n.nowServing.Status = n.inputDelay.Get(), statusServing
 			EventQueue = append(EventQueue, n.nowServing.StatusChangeAt)
 		}
 	}
 
-	if len(n.callChannel) > 0 {
+	if n.callChannel.Len() > 0 {
 		if n.nowServing.Status != statusServing {
-			n.nowServing = <-n.callChannel
+			n.nowServing = n.callChannel.Pop()
 			n.nowServing.StatusChangeAt, n.nowServing.Status = n.calledDelay.Get(), statusServing
 			EventQueue = append(EventQueue, n.nowServing.StatusChangeAt)
 		} else {
-			<-n.callChannel
+			n.callChannel.Pop()
 		}
 	}
 }
-func NewNode(inputDelay Delay, calledDelay Delay, inChannel <-chan Request, callChannel <-chan Request, orbitChannel <-chan Request, orbitAppendChannel chan<- Request, outChannel chan<- Request) *Node {
+func NewNode(inputDelay Delay, calledDelay Delay, inChannel *ReadRouter, callChannel *ReadRouter, orbitChannel *ReadRouter, orbitAppendChannel *WriteRouter, outChannel chan<- Request) *Node {
 	return &Node{inputDelay: inputDelay,
 		calledDelay:        calledDelay,
 		inChannel:          inChannel,

@@ -3,13 +3,13 @@ package components
 type Orbit struct {
 	requests           []Request
 	delay              Delay
-	orbitChannel       chan<- Request
-	orbitAppendChannel <-chan Request
+	orbitChannel       *WriteRouter
+	orbitAppendChannel *ReadRouter
 }
 
 func (o *Orbit) Append() {
-	for i := 0; i < len(o.orbitAppendChannel); i++ {
-		req := <-o.orbitAppendChannel
+	for i := 0; i < o.orbitAppendChannel.Len(); i++ {
+		req := o.orbitAppendChannel.Pop()
 		req.StatusChangeAt = o.delay.Get()
 		EventQueue = append(EventQueue, req.StatusChangeAt)
 		req.Status = statusTravel
@@ -24,7 +24,7 @@ func (o *Orbit) Produce() {
 			if almostEqual(v.StatusChangeAt, Time) {
 				ret := v
 				o.requests = o.requests[1:]
-				o.orbitChannel <- ret
+				o.orbitChannel.Push(ret)
 				return
 			}
 		}
@@ -32,7 +32,7 @@ func (o *Orbit) Produce() {
 	}
 }
 
-func NewOrbit(delay Delay, orbitChannel chan<- Request, orbitAppendChannel <-chan Request) *Orbit {
+func NewOrbit(delay Delay, orbitChannel *WriteRouter, orbitAppendChannel *ReadRouter) *Orbit {
 	return &Orbit{
 		delay:              delay,
 		orbitChannel:       orbitChannel,

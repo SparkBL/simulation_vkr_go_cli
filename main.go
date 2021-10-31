@@ -45,19 +45,19 @@ func main() {
 	if err != nil {
 		return
 	}
-	var inputChannel = make(chan components.Request, 1)
-	var orbitChannel = make(chan components.Request, 1)
-	var orbitAppendChannel = make(chan components.Request, 2)
-	var outputChannel = make(chan components.Request, 1)
-	var calledChannel = make(chan components.Request, 1)
+	var inputChannelR, inputChannelW = components.NewRouter()
+	var orbitChannelR, orbitChannelW = components.NewRouter()
+	var orbitAppendChannelR, orbitAppendChannelW = components.NewRouter()
+	var outputChannel = make(chan components.Request, 10)
+	var calledChannelR, calledChannelW = components.NewRouter()
 	var inStream components.Process
 	var sigmaDelay components.Delay
 
 	switch conf.InputType {
 	case "simple":
-		inStream = components.NewSimpleStream(components.ExpDelay{Intensity: conf.LSimple}, components.TypeInput, inputChannel)
+		inStream = components.NewSimpleStream(components.ExpDelay{Intensity: conf.LSimple}, components.TypeInput, inputChannelW)
 	case "mmpp":
-		inStream = components.NewMMPP(conf.L, conf.Q, components.TypeInput, inputChannel)
+		inStream = components.NewMMPP(conf.L, conf.Q, components.TypeInput, inputChannelW)
 	default:
 		return
 	}
@@ -71,9 +71,9 @@ func main() {
 		return
 	}
 
-	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannel)
-	orbit := components.NewOrbit(sigmaDelay, orbitChannel, orbitAppendChannel)
-	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannel, calledChannel, orbitChannel, orbitAppendChannel, outputChannel)
+	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannelW)
+	orbit := components.NewOrbit(sigmaDelay, orbitChannelW, orbitAppendChannelR)
+	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannelR, calledChannelR, orbitChannelR, orbitAppendChannelW, outputChannel)
 	statCollector := components.NewStatCollector(outputChannel)
 	components.Time = 0
 	components.End = conf.End
@@ -98,7 +98,6 @@ func main() {
 			components.Time, components.EventQueue = components.EventQueue[0], components.EventQueue[1:]
 		}
 	}
-	close(outputChannel)
 	fmt.Printf("\nSimulation time - %v", time.Since(start))
 
 	writeToCSV(*outputFile, statCollector.GetDistribution())
