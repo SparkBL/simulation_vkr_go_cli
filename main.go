@@ -48,7 +48,7 @@ func main() {
 	var inputChannel = make(chan components.Request, 1)
 	var orbitChannel = make(chan components.Request, 1)
 	var orbitAppendChannel = make(chan components.Request, 2)
-	var outputChannel = make(chan components.Request, 1)
+	var outputChannel = make(chan components.Request, 10)
 	var calledChannel = make(chan components.Request, 1)
 	var inStream components.Process
 	var sigmaDelay components.Delay
@@ -74,7 +74,7 @@ func main() {
 	callStream := components.NewSimpleStream(components.ExpDelay{Intensity: conf.Alpha}, components.TypeCalled, calledChannel)
 	orbit := components.NewOrbit(sigmaDelay, orbitChannel, orbitAppendChannel)
 	node := components.NewNode(components.ExpDelay{Intensity: conf.Mu1}, components.ExpDelay{Intensity: conf.Mu2}, inputChannel, calledChannel, orbitChannel, orbitAppendChannel, outputChannel)
-	statCollector := components.NewStatCollector(outputChannel)
+	statCollector := components.NewTimedStatCollector(outputChannel)
 	components.Time = 0
 	components.End = conf.End
 	components.Interval = conf.Interval
